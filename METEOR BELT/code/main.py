@@ -7,7 +7,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
         self.image = pygame.image.load(join('images', 'paper spaceship.png')).convert_alpha()
-        self.rect = self.image.get_frect(center = (WINDOW_WIDTH/2, WINDOW_HEIGHT/2))
+        self.rect = self.image.get_rect(center = (WINDOW_WIDTH/2, WINDOW_HEIGHT/2))
         self.direction = pygame.math.Vector2()
         self.speed = 300
 
@@ -38,7 +38,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.top = 0
         if self.rect.bottom > WINDOW_HEIGHT:
             self.rect.bottom = WINDOW_HEIGHT
-        recent_keys = pygame.key.get_just_pressed()
+        recent_keys = pygame.key.get_pressed()
         if recent_keys[pygame.K_SPACE] and self.can_shoot:
             Laser(laser_surf, (self.rect.centerx + 5,self.rect.top), all_sprites)
             self.can_shoot = False
@@ -50,13 +50,13 @@ class Star(pygame.sprite.Sprite):
     def __init__(self, groups, surf):
         super().__init__(groups)
         self.image = surf
-        self.rect = self.image.get_frect(center = (random.randint(0,WINDOW_WIDTH), random.randint(0,WINDOW_HEIGHT)))
+        self.rect = self.image.get_rect(center = (random.randint(0,WINDOW_WIDTH), random.randint(0,WINDOW_HEIGHT)))
 
 class Laser(pygame.sprite.Sprite):
     def __init__(self, surf, pos, groups):
         super().__init__(groups)
         self.image = surf
-        self.rect = self.image.get_frect(midbottom = pos)
+        self.rect = self.image.get_rect(midbottom = pos)
         laser_sound.play()
 
     def update(self, dt):
@@ -75,7 +75,7 @@ class Meteor(pygame.sprite.Sprite):
             self.kill()
         self.image_init = surf
         self.image = self.image_init
-        self.rect = self.image.get_frect(center = (random.randint(0,WINDOW_WIDTH), random.randint(-WINDOW_HEIGHT,0)))
+        self.rect = self.image.get_rect(center = (random.randint(0,WINDOW_WIDTH), random.randint(-WINDOW_HEIGHT,0)))
         self.direction = pygame.math.Vector2(random.randint(-100,100), random.randint(1,100)).normalize()
         self.speed = random.randint(100, 400)
         self.rotation_speed = random.randint(-80,80)
@@ -85,7 +85,7 @@ class Meteor(pygame.sprite.Sprite):
     def update(self, dt):
         self.rotation += self.rotation_speed * dt
         self.image = pygame.transform.rotozoom(self.image_init, self.rotation, 1)
-        self.rect = self.image.get_frect(center = self.rect.center)
+        self.rect = self.image.get_rect(center = self.rect.center)
         self.rect.y += self.speed * self.direction.y * dt
         self.rect.x += self.speed * self.direction.x * dt
         if self.rect.top > WINDOW_HEIGHT or self.rect.left > WINDOW_WIDTH or self.rect.right < 0:
@@ -95,7 +95,7 @@ class AnimatedExplosion(pygame.sprite.Sprite):
     def __init__(self, frames, pos, groups):
         super().__init__(groups)
         self.image = frames[0]
-        self.rect = self.image.get_frect(center = pos)
+        self.rect = self.image.get_rect(center = pos)
         self.frames = frames
         self.frame_index = 0
         explosion_sound.play()
@@ -110,7 +110,7 @@ class AnimatedExplosion(pygame.sprite.Sprite):
 def display_score():
     current_time = pygame.time.get_ticks()
     text_surf = font.render(str(current_time), True, (240,240,240))
-    text_rect = text_surf.get_frect(midtop = (WINDOW_WIDTH/2, 50))
+    text_rect = text_surf.get_rect(midtop = (WINDOW_WIDTH/2, 50))
     display_surface.blit(text_surf, text_rect)
     pygame.draw.rect(display_surface, (240,240,240), text_rect.inflate(20,20).move(0,-9), 5)
 
