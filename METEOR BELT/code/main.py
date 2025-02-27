@@ -1,12 +1,12 @@
 import pygame
 import random
 import math
-from os.path import join
+import os
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
-        self.image = pygame.image.load(join('images', 'paper spaceship.png')).convert_alpha()
+        self.image = pygame.image.load(os.path.join(BASE_DIR, 'images', 'paper spaceship.png')).convert_alpha()
         self.rect = self.image.get_frect(center = (WINDOW_WIDTH/2, WINDOW_HEIGHT/2))
         self.direction = pygame.math.Vector2()
         self.speed = 300
@@ -108,16 +108,24 @@ class AnimatedExplosion(pygame.sprite.Sprite):
 
 
 def display_score():
-    current_time = pygame.time.get_ticks()
-    text_surf = font.render(str(current_time), True, (240,240,240))
-    text_rect = text_surf.get_frect(midtop = (WINDOW_WIDTH/2, 50))
+    remaining_distance = DISTANCE - pygame.time.get_ticks()
+    if remaining_distance > 0:
+        text_surf = font.render('-' + str(remaining_distance) + ' m', True, (240,240,240))
+        text_rect = text_surf.get_frect(midtop = (WINDOW_WIDTH/2, 50))
+        pygame.draw.rect(display_surface, (240,240,240), text_rect.inflate(20,20).move(0,-9), 5)
+    else:
+        text_surf = font.render('WINNER!!! YOU SURVIVED!', True, (240,240,240))
+        text_rect = text_surf.get_frect(center = (WINDOW_WIDTH/2, WINDOW_HEIGHT/2))
     display_surface.blit(text_surf, text_rect)
-    pygame.draw.rect(display_surface, (240,240,240), text_rect.inflate(20,20).move(0,-9), 5)
+    
 
 # general setup
 pygame.init()
+pygame.mixer.init()
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
 NUMBER_OF_STARS = 20
+DISTANCE = 211000
 display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption('Space Shooter')
 running = True
@@ -129,22 +137,27 @@ meteor_sprites = pygame.sprite.Group()
 
 
 # imports
-path = 'images'
-star_surf = pygame.image.load(join(path, 'paper star.png')).convert_alpha()
+
+
+star_surf = pygame.image.load(os.path.join(BASE_DIR, 'images', 'paper star.png')).convert_alpha()
 for i in range(NUMBER_OF_STARS):
     Star(all_sprites, star_surf)
 player = Player(all_sprites)
-meteor_surf = pygame.image.load(join(path, 'paper asteroid.png')).convert_alpha()
-laser_surf = pygame.image.load(join(path, 'laser.png')).convert_alpha()
-font = pygame.font.Font(join(path, 'Oxanium-Bold.ttf'), 50)
-explosion_frames = [pygame.image.load(join('images', 'explosion', f'{i}.png')).convert_alpha() for i in range(21)]
-laser_sound = pygame.mixer.Sound(join('audio', 'laser.wav'))
-laser_sound.set_volume(0.5)
-explosion_sound = pygame.mixer.Sound(join('audio', 'explosion.wav'))
-explosion_sound.set_volume(0.5)
-game_music = pygame.mixer.Sound(join('audio', 'The Forbidden Zone.wav'))
-laser_sound.set_volume(0.4)
-game_music.play(-1)
+meteor_surf = pygame.image.load(os.path.join(BASE_DIR, 'images', 'paper asteroid.png')).convert_alpha()
+laser_surf = pygame.image.load(os.path.join(BASE_DIR, 'images', 'laser.png')).convert_alpha()
+font = pygame.font.Font(os.path.join(BASE_DIR, 'images', 'Oxanium-Bold.ttf'), 50)
+explosion_frames = [pygame.image.load(os.path.join(BASE_DIR, 'images', 'explosion', f'{i}.png')).convert_alpha() for i in range(21)]
+laser_sound = pygame.mixer.Sound(os.path.join(BASE_DIR, 'audio', 'laser.wav'))
+laser_sound.set_volume(0.3)
+explosion_sound = pygame.mixer.Sound(os.path.join(BASE_DIR, 'audio', 'explosion.wav'))
+explosion_sound.set_volume(0.6)
+game_music = pygame.mixer.Sound(os.path.join(BASE_DIR, 'audio', 'The Forbidden Zone.wav'))
+game_music.set_volume(0.8)
+game_music.play(0)
+background = pygame.image.load(os.path.join(BASE_DIR, 'images', 'bg.png'))
+background = pygame.transform.scale(background, (WINDOW_WIDTH + 100,WINDOW_HEIGHT + 100)) 
+bg_y = -50
+bg_speed = 1                     
 difficulty = 1
 
 
@@ -158,24 +171,26 @@ pygame.time.set_timer(meteor_event, 100)
 while running:
     dt = clock.tick() / 500
     difficulty += dt / 50 
-    print(difficulty) 
+    bg_y = (bg_y + bg_speed) % WINDOW_HEIGHT
     # event loop
     for event in pygame.event.get(): 
         if event.type == pygame.QUIT:
             running = False
-        if event.type == meteor_event:
+        if event.type == meteor_event and DISTANCE - pygame.time.get_ticks() > 0:
             Meteor(meteor_surf, difficulty, (all_sprites, meteor_sprites))
 
     all_sprites.update(dt)
 
     # draw the game
-    display_surface.fill(('black'))
+    display_surface.blit(background, (0,bg_y))
+    display_surface.blit(background, (0,bg_y - WINDOW_HEIGHT))
     display_score()
     all_sprites.draw(display_surface)
 
     # test collision
     collision_sprites = pygame.sprite.spritecollide(player, meteor_sprites, True, pygame.sprite.collide_mask)
     if collision_sprites:
+        pass
         running = False
     pygame.display.update()
 pygame.quit()
